@@ -21,7 +21,7 @@ typedef struct {
     char participantes[3][MAX_NAMES_LENGTH];
 } Evento;
 
-
+void alteraDuracao(Evento eventos[], int numeroEventos, char strDescricao[MAX_NAMES_LENGTH], char strDuracao[MAX_NAMES_LENGTH]);
 void listaEventos(Evento eventos[], int numeroEventos);
 int criaEvento(Evento eventos[], int numeroEventos, char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH]);
 void parteString(char componentes[][MAX_NAMES_LENGTH], char params[]);
@@ -46,7 +46,7 @@ int main() {
 		scanf("%c", &cmd);
 
 		/* Ler restantes parametros, caso existam, e adiciona-los a um array de componentes */
-		if (cmd == 'a' || cmd == 'r'){
+		if (cmd == 'a' || cmd == 'r' || cmd == 't'){
 			idx = 0;
 			while((c = getchar()) != '\n') {
 				if (idx == 0 && c == ' ') {
@@ -56,8 +56,8 @@ int main() {
 			}
 			params[idx] = '\0';
 
-			printf("Command: [%c]\n", cmd);
-			printf("Params: [%s]\n", params);
+			/*printf("Command: [%c]\n", cmd);*/
+			/*printf("Params: [%s]\n", params);*/
 
 			/* Partir a string, caso exista, nos diversos componentes */
 			parteString(componentes, params);
@@ -75,6 +75,10 @@ int main() {
 			break;
 			case 'l' : listaEventos(eventos, numeroEventos);
 			break;
+			case 't' :{
+				alteraDuracao(eventos, numeroEventos, componentes[1], componentes[2]);
+			}
+			break;
 		}
 
 	}
@@ -82,11 +86,25 @@ int main() {
     return 0;
 }
 
+/* fazer printEvento(Evento evento)) no formato do stor*/
+
+void printEvento(Evento evento){
+	int i;
+	printf("%s %s %s %d Sala%d %s\n", evento.descricao, evento.data, evento.hora, evento.duracao, evento.sala, evento.responsavel);
+	for (i = 0; i < 3; i++){
+		printf("%s ", evento.participantes[i]);
+	}
+	printf("\n");
+
+}
+
 void listaEventos(Evento eventos[], int numeroEventos) {
     int i;
     for(i = 0; i < numeroEventos; i++) {
-        Evento evento = eventos[i];
-        printf("evento[%d]: %s\n", i, evento.descricao);
+		/*printEvento(eventos[i]);*/
+		printEvento(eventos[i]);
+        /*Evento evento = eventos[i];*/
+        /*printf("evento[%d]: %s\n", i, evento.descricao);*/
     }
 }
 
@@ -110,7 +128,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONEN
     strcpy(evento.responsavel, componentes[6]);
 
 	for(i = 0; i < (numComp - 6); i++){
-    	memset(evento.participantes[i], '\0', sizeof(evento.participantes[i]));
+    	memset(evento.participantes[i], ' ', sizeof(evento.participantes[i]));
     	strcpy(evento.participantes[i], componentes[7 + i]);
     }
     eventos[numeroEventos++] = evento;
@@ -141,7 +159,7 @@ void parteString(char componentes[][MAX_NAMES_LENGTH], char params[]) {
 	sprintf(componentes[0], "%d", (compIdx - 1));
 
 	for ( i = 0; i < compIdx; i++) {
-		printf("Componente [%d]: [%s]\n", i, componentes[i]);
+		/*printf("Componente [%d]: [%s]\n", i, componentes[i]);*/
 	}
 }
 
@@ -168,6 +186,29 @@ int removeEvento(Evento eventos[],int numeroEventos,char strDescricao[MAX_NAMES_
 		return numEventosAux;
 	}	
 
-	printf("Evento %s inexistente.", strDescricao);
+	printf("Evento %s inexistente.\n", strDescricao);
 	return numeroEventos;
 }
+
+void alteraDuracao(Evento eventos[], int numeroEventos, char strDescricao[MAX_NAMES_LENGTH], char strDuracao[MAX_NAMES_LENGTH]){
+	int i, cont = 0;
+	printf("strDescricao = %s\n", strDescricao);
+	for (i = 0; i < numeroEventos; i++){
+		if (strcmp(strDescricao, eventos[i].descricao) == 0){
+			eventos[i].duracao = atoi(strDuracao);
+			printf("nova duracao : %d\n", eventos[i].duracao);
+			/*Ativa a variavel de modo a que o erro nao ocorra*/
+			cont++;
+		}
+	}
+	if (cont == 0){
+		printf("Evento %s inexistente.\n", strDescricao);
+	}
+}
+
+
+
+
+
+
+
