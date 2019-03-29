@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#define __USE_XOPEN
+
 #include <time.h>
 
 #define MAX_SALAS 10
@@ -10,11 +13,9 @@
 #define MAX_COMPONENTES 10
 
 
-typedef struct {
+typedef struct evento {
     char descricao[MAX_NAMES_LENGTH];
-    /*struct tm data;*/
-	char data[9]; 
-	char hora[5];
+    struct tm dataHora;
     int duracao;
     int sala;
     char responsavel[MAX_NAMES_LENGTH];
@@ -32,6 +33,11 @@ int removeEvento(Evento eventos[], int numeroEventos, int indexEvento);
 
 void listaEventos(Evento eventos[], int numeroEventos);
 
+int getEventosDaSala(Evento eventos[], int numeroEventos, Evento eventosSala[MAX_EVENTOS_SALA], int sala);
+
+void ordenaEventos(Evento eventos[], int minimo, int numeroEventos);
+
+time_t getTimestamp(Evento evento);
 
 void parteString(char componentes[][MAX_NAMES_LENGTH], char params[]);
 
@@ -57,7 +63,7 @@ int main() {
 		}
 
 		/* Ler restantes parametros, caso existam, e adiciona-los a um array de componentes */
-		if (cmd == 'a' || cmd == 'r' || cmd == 't'){
+		if (cmd == 'a' || cmd == 'r' || cmd == 't' || cmd == 's'){
 			char c;
 			int idx = 0;
 			while((c = getchar()) != '\n') {
@@ -105,12 +111,23 @@ int main() {
 				}
 				break;
 			case 'l' :
+				/* indices de 0 ate numero de eventos -1 */
+				ordenaEventos(eventos, 0, numeroEventos - 1);
 				listaEventos(eventos, numeroEventos);
 				break;
 			case 't' :
 				eventoTmp = eventos[indexEvento];
 				/* componentes[2] => nova duracao */
 				eventos[indexEvento] = alteraDuracao(eventoTmp, componentes[2]);
+				break;
+			case 's':
+				{
+					Evento eventosSala[MAX_EVENTOS_SALA];
+					int numeroEventosSala = getEventosDaSala(eventos, numeroEventos, eventosSala, atoi(componentes[1]));
+					/* indices de 0 ate numero de eventos da sala -1 */
+					ordenaEventos(eventosSala, 0, numeroEventosSala - 1);
+					listaEventos(eventosSala, numeroEventosSala);
+				}
 				break;
 		}
 
@@ -124,17 +141,25 @@ int main() {
 /* fazer printEvento(Evento evento)) no formato pedido */
 
 void printEvento(Evento evento){
-	int i;
-	printf("%s %s %s %d Sala%d %s\n", evento.descricao, evento.data, evento.hora, evento.duracao, evento.sala, evento.responsavel);
+	int i, numParticipantes = 0;
+	char data[9];
+	char hora[5];
+
+	strftime(data, sizeof(data), "%d%m%Y", &evento.dataHora);
+	strftime(hora, sizeof(hora), "%H%M", &evento.dataHora);
+
+	printf("%s %s %s %d Sala%d %s\n", evento.descricao, data, hora, evento.duracao, evento.sala, evento.responsavel);
 	for (i = 0; i < 3; i++){
 		/* Ignora participantes nao existentes */
 		if (evento.participantes[i][0] == '\0') {
 			break;
 		}
-
+		numParticipantes++;
 		printf("[%s] ", evento.participantes[i]);
 	}
-	printf("\n");
+	if(numParticipantes > 0) {
+		printf("\n");
+	}
 
 }
 
@@ -142,6 +167,56 @@ void listaEventos(Evento eventos[], int numeroEventos) {
     int i;
     for(i = 0; i < numeroEventos; i++) {
 		printEvento(eventos[i]);
+    }
+}
+
+int getEventosDaSala(Evento eventos[], int numeroEventos, Evento eventosSala[MAX_EVENTOS_SALA], int sala) {
+	int i, numeroEventosSala = 0;
+
+    for(i = 0; i < numeroEventos; i++) {
+		if(eventos[i].sala == sala) {
+			eventosSala[numeroEventosSala++] = eventos[i];
+		}
+    }
+
+	return numeroEventosSala;
+}
+
+time_t getTimestamp(Evento evento) {
+	time_t epoch = mktime(&evento.dataHora);
+	return epoch;
+}
+
+void ordenaEventos(Evento eventos[], int min, int numeroEventos) {
+	int i = min, j = numeroEventos;
+	Evento eventoTmp = eventos[(min + numeroEventos) / 2];
+     
+    while(i <= j) {
+        while(getTimestamp(eventos[i]) < getTimestamp(eventoTmp) && i < numeroEventos) {
+            i++;
+        }
+        while(getTimestamp(eventos[j]) > getTimestamp(eventoTmp) && j > min) {
+            j--;
+        }
+        if(i <= j) {
+			/* No caso de existirem vários eventos que se iniciem ao mesmo tempo, deverão ser listados pela ordem crescente do número da sala */
+			if(getTimestamp(eventos[i]) != getTimestamp(eventos[j]) ||
+					(getTimestamp(eventos[i]) == getTimestamp(eventos[j]) && eventos[i].sala > eventos[j].sala)) {
+            	Evento eventoTmp2 = eventos[i];
+	            eventos[i] = eventos[j];
+	            eventos[j] = eventoTmp2;
+			}
+
+            i++;
+            j--;
+        }
+    }
+     
+    if(j > min) {
+        ordenaEventos(eventos, min, j);
+    }
+    if(i < numeroEventos) {
+        ordenaEventos(eventos, i, numeroEventos);
     }
 }
 
@@ -165,15 +240,14 @@ int procuraEvento(Evento eventos[], int numeroEventos,char descricaoEvento[MAX_N
 int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH]) {
     Evento evento;
 	int i, numComp = atoi(componentes[0]);
+	char dataHora[8 + 4 + 1];
    
     memset(evento.descricao, '\0', sizeof(evento.descricao));
     strcpy(evento.descricao, componentes[1]);
 
-    /*evento.data = *localtime(&(time_t){time(NULL)});*/
-	memset(evento.data, '\0', sizeof(evento.data));
-	strcpy(evento.data,componentes[2]);
-	memset(evento.hora, '\0', sizeof(evento.hora));
-	strcpy(evento.hora,componentes[3]);
+	sprintf(dataHora, "%s %s", componentes[2], componentes[3]);
+	strptime(dataHora, "%d%m%Y %H%M", &evento.dataHora);
+
     evento.duracao = atoi(componentes[4]);
     evento.sala = atoi(componentes[5]);
 	
@@ -181,8 +255,8 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONEN
     memset(evento.responsavel, '\0', sizeof(evento.responsavel));
     strcpy(evento.responsavel, componentes[6]);
 
+   	memset(evento.participantes, '\0', sizeof(evento.participantes));
 	for(i = 0; i < (numComp - 6); i++){
-    	memset(evento.participantes[i], '\0', sizeof(evento.participantes[i]));
     	strcpy(evento.participantes[i], componentes[7 + i]);
     }
     eventos[numeroEventos++] = evento;
@@ -211,12 +285,6 @@ void parteString(char componentes[][MAX_NAMES_LENGTH], char params[]) {
 
 	/* Adicionar o numero de componentes na primeira posicao */
 	sprintf(componentes[0], "%d", (compIdx - 1));
-
-	/*
-	for ( i = 0; i < compIdx; i++) {
-		printf("Componente [%d]: [%s]\n", i, componentes[i]);
-	}
-	*/
 }
 
 
