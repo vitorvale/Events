@@ -22,11 +22,9 @@ typedef struct {
 } Evento;
 
 
-char lerComando(char params[]);
-
 int criaEvento(Evento eventos[], int numeroEventos, char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH]);
 
-int procuraEvento(Evento eventos[], int numeroEventos, char str_descricao[]);
+int procuraEvento(Evento eventos[], int numeroEventos, char descricaoEvento[]);
 
 Evento alteraDuracao(Evento evento, char strDuracao[MAX_NAMES_LENGTH]);
 
@@ -47,7 +45,7 @@ int main() {
 	char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH];
 	char cmd;
 
-	while (cmd != 'x'){
+	while (1){
 		/* evento temporario manipulado pelos comandos do utilizador */
 		Evento eventoTmp;
 	    int numParam, indexEvento = -1;
@@ -91,7 +89,6 @@ int main() {
 
 			indexEvento = procuraEvento(eventos, numeroEventos, descricaoEvento);
 			if(indexEvento < 0) {
-				printf("Evento %s inexistente.\n", descricaoEvento);
 				continue;
 			}
 		}
