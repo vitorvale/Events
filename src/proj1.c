@@ -46,7 +46,7 @@ void mudaSala(Evento eventos[], int indexEvento, int numeroEventos, int novaSala
 
 void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, char participante[MAX_NAMES_LENGTH]);
 
-void removeParticipante(Evento eventos[], int indexEvento,int numeroEventos, char participante[MAX_NAMES_LENGTH]);
+void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX_NAMES_LENGTH]);
 
 int verificaSala(Evento eventos[], int numeroEventos,int indexEvento,time_t Timestamp, int duracao, int novaSala);
 
@@ -69,8 +69,6 @@ int main() {
 	char cmd;
 
 	while (1){
-		/* evento temporario manipulado pelos comandos do utilizador */
-		Evento eventoTmp;
 	    int numParam, indexEvento = -1;
 
 		/* Ler comando */
@@ -148,7 +146,7 @@ int main() {
 			}
 			/* Adicionar verificacao*/
 			case 'R' :{
-				removeParticipante(eventos, indexEvento, numeroEventos, componentes[2]);
+				removeParticipante(eventos, indexEvento, componentes[2]);
 				break;
 			}	
 			case 's':
@@ -237,10 +235,11 @@ void ordenaEventos(Evento eventos[], int min, int numeroEventos) {
         if(i <= j) {
 			/* No caso de existirem vários eventos que se iniciem ao mesmo tempo, deverão ser listados pela ordem crescente do número da sala */
 			if(getTimestamp(eventos[i]) != getTimestamp(eventos[j]) ||
-					(getTimestamp(eventos[i]) == getTimestamp(eventos[j]) && eventos[i].sala > eventos[j].sala)) {
+					((getTimestamp(eventos[i]) == getTimestamp(eventos[j])) && (eventos[i].sala > eventos[j].sala))) {		
             	Evento eventoTmp2 = eventos[i];
 	            eventos[i] = eventos[j];
 	            eventos[j] = eventoTmp2;
+				
 			}
 
             i++;
@@ -259,9 +258,6 @@ void ordenaEventos(Evento eventos[], int min, int numeroEventos) {
 int procuraEvento(Evento eventos[], int numeroEventos,char descricaoEvento[MAX_NAMES_LENGTH]) {
 	int i;
 
-	/* TODO: remover esta linha de debug */
-	printf("Descricao evento: [%s]\n", descricaoEvento);
-
     for(i = 0; i < numeroEventos; i++) {
 		Evento evento = eventos[i];
         if(strcmp(descricaoEvento, evento.descricao) == 0) {
@@ -275,10 +271,17 @@ int procuraEvento(Evento eventos[], int numeroEventos,char descricaoEvento[MAX_N
 
 int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH]) {
     Evento evento;
-	int i, numComp = atoi(componentes[0]), contSala, indexFalso = -5, contDisp, contResp, numEventosDecorrer, idx;
+	int i, numComp = atoi(componentes[0]), contSala = 0, indexFalso = -5, contDisp = 0, contResp = 0, numEventosDecorrer = 0, idx = 0;
 	char dataHora[8 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH], stringBarraZero[1];
 	Evento eventosAdecorrer[MAX_EVENTOS_DECORRER];
-	memset(stringBarraZero, '\0', sizeof(stringBarraZero));;
+	memset(stringBarraZero, '\0', sizeof(stringBarraZero));
+	for (i = 0; i < 4; i++){
+		memset(listaIndisp[i], '\0',sizeof(listaIndisp[i]));
+	}
+	/*printf("lista de indisponiveis :\n");
+	for (i = 0; i < 4; i++){
+		printf("Pos [%d] : %s\n", i, listaIndisp[i]);
+	}*/
    
     memset(evento.descricao, '\0', sizeof(evento.descricao));
     strcpy(evento.descricao, componentes[1]);
@@ -321,9 +324,12 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONEN
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", evento.descricao, evento.sala);
 	}
 	else if ((contSala == 0) && (idx != 0)){
-		printf("Impossivel agendar evento %s. Participante %s %s %s %s tem um evento sobreposto.\n", evento.descricao, listaIndisp[0], listaIndisp[1], listaIndisp[2], listaIndisp[3]);
+		for (i = 0; i < idx; i++){
+			printf("Impossivel agendar evento %s. Participante %s tem um evento sobreposto.\n", evento.descricao, listaIndisp[i]);
+		}
 	}
 	else if ((contSala == 0) && (idx == 0)){
+		/*printf("Criou evento : [%s]\n", evento.descricao);*/
     	eventos[numeroEventos++] = evento;
 	}
 
@@ -370,12 +376,20 @@ int removeEvento(Evento eventos[], int numeroEventos, int indexEvento){
 
 
 void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int duracao){
-	int contSala, numEventosDecorrer, idx, i, contDisp, contResp;
+	int contSala = 0, numEventosDecorrer = 0, idx = 0, i, contDisp = 0, contResp = 0;
 	Evento eventosAdecorrer[MAX_EVENTOS_DECORRER];
 	char listaIndisp[4][MAX_NAMES_LENGTH], stringBarraZero[1];
 	memset(stringBarraZero, '\0', sizeof(stringBarraZero));
+	for (i = 0; i < 4; i++){
+		memset(listaIndisp[i], '\0',sizeof(listaIndisp[i]));
+	}
 
 	numEventosDecorrer = buscaEventosAdecorrer(eventos, numeroEventos, indexEvento, eventosAdecorrer, getTimestamp(eventos[indexEvento]), duracao);
+
+	/*printf("Lista de eventos a decorrer [%d]\n", numEventosDecorrer);
+	for (i = 0; i < numEventosDecorrer; i++){
+		printEvento(eventosAdecorrer[i]);
+	}*/
 
 	contResp = verificaPessoa(eventosAdecorrer, numEventosDecorrer, eventos[indexEvento].responsavel);
 	if (contResp != 0){
@@ -393,6 +407,11 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 		contDisp = 0;	
 	}
 
+	/*printf("lista de indisponiveis [%d]:\n", idx);
+	for (i = 0; i < 4; i++){
+		printf("Pos [%d] : %s\n", i, listaIndisp[i]);
+	}*/
+
 	contSala = verificaSala(eventos, numeroEventos, indexEvento,getTimestamp(eventos[indexEvento]), duracao, eventos[indexEvento].sala);
 
 	/* TODO: remover esta linha de debug */
@@ -400,11 +419,12 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", eventos[indexEvento].descricao, eventos[indexEvento].sala);
 	}
 	else if ((contSala == 0) && (idx != 0)){
-		printf("Impossivel agendar evento %s. Participante %s %s %s %s tem um evento sobreposto.\n", eventos[indexEvento].descricao, listaIndisp[0], listaIndisp[1], listaIndisp[2], listaIndisp[3]);
+		for (i = 0; i < idx; i++){
+			printf("Impossivel agendar evento %s. Participante %s tem um evento sobreposto.\n", eventos[indexEvento].descricao, listaIndisp[i]);
+		}
 	}
 	/*Muda o evento de sala*/
 	else if ((contSala == 0) && (idx == 0)){
-		printf("nova duracao : %d\n", duracao);
 		eventos[indexEvento].duracao = duracao;
 	}
 
@@ -421,8 +441,6 @@ void mudaSala(Evento eventos[], int indexEvento, int numeroEventos, int novaSala
 	}
 	/*Muda o evento de sala*/
 	else if (contSala == 0){
-		/* Eliminar comentario*/
-		printf("nova sala : [%d]\n", novaSala);
 		eventos[indexEvento].sala = novaSala;
 	}
 	
@@ -435,11 +453,11 @@ int verificaSala(Evento eventos[], int numeroEventos,int indexEvento,time_t time
 		if ((eventos[i].sala == Sala) && (i != indexEvento)){
 			timestampIniSala2 = getTimestamp(eventos[i]);
 			timestampFinSala2 = timestampIniSala2 + (eventos[i].duracao * 60);
-			/* Eliminar comentario*/
-			printf("Timestamp incial sala2 = %lu e TimestampFinal sala2 = %lu e Timestamp inicial sala 1 = %lu e Timestamp final sala 1 = %lu .\n", timestampIniSala2, timestampFinSala2, timestampIniSala1, timestampFinSala1);
-			if (((timestampIniSala2 <= timestampIniSala1) && (timestampIniSala1 <= timestampFinSala2)) || ((timestampIniSala2 <= timestampFinSala1) && (timestampFinSala1 <= timestampFinSala2))){
-				/*Eliminar comentario*/
-				printf("Deu hit no intervalo .\n");
+			/*FIZ ALTERACOES NOS INTERVALOS PARA VER OS OUTPUTS*/
+			if (((timestampIniSala2 < timestampIniSala1) && (timestampIniSala1 < timestampFinSala2)) || ((timestampIniSala2 < timestampFinSala1) && (timestampFinSala1 < timestampFinSala2))
+			|| ((timestampIniSala1 < timestampIniSala2) && (timestampIniSala2 < timestampFinSala1)) || ((timestampIniSala1 < timestampFinSala2) && (timestampFinSala2 < timestampFinSala1))
+			|| ((timestampIniSala1 < timestampIniSala2) && (timestampFinSala2 < timestampFinSala1)) || ((timestampIniSala2 < timestampIniSala1) && (timestampFinSala1 < timestampFinSala2)) 
+			|| ((timestampIniSala1 == timestampIniSala2) && (timestampFinSala1 == timestampFinSala2))){
 				cont++;
 			}
 		}
@@ -447,7 +465,7 @@ int verificaSala(Evento eventos[], int numeroEventos,int indexEvento,time_t time
 	return cont;
 }
 
-void removeParticipante(Evento eventos[], int indexEvento,int numeroEventos, char participante[MAX_NAMES_LENGTH]){
+void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX_NAMES_LENGTH]){
 	int i, contPresenca = 0, contPar = 0, indexParticipante = 0;
 	char stringBarraZero[1];
 	memset(stringBarraZero, '\0', sizeof(stringBarraZero));
@@ -462,7 +480,6 @@ void removeParticipante(Evento eventos[], int indexEvento,int numeroEventos, cha
 			contPar++;
 		}
 	}
-	printf("Presenca : %d , numero de participantes : %d\n", contPresenca, contPar);
 	if ((contPresenca != 0) && (contPar == 1)){
 		printf("Impossivel remover participante. Participante %s e o unico participante no evento %s.\n", participante, eventos[indexEvento].descricao);
 	}
@@ -482,11 +499,18 @@ void removeParticipante(Evento eventos[], int indexEvento,int numeroEventos, cha
 }
 
 void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hora[]){
-	int contSala, contDisp, i, contResp = 0, idx = 0, numEventosDecorrer;
+	int contSala = 0, contDisp = 0, i, contResp = 0, idx = 0, numEventosDecorrer = 0;
 	Evento eventoAux = eventos[indexEvento];
 	Evento	eventosAdecorrer[MAX_EVENTOS_DECORRER];
 	char listaIndisp[4][MAX_NAMES_LENGTH], stringBarraZero[1];
 	memset(stringBarraZero, '\0', sizeof(stringBarraZero));
+	for (i = 0; i < 4; i++){
+		memset(listaIndisp[i], '\0',sizeof(listaIndisp[i]));
+	}
+	/*printf("lista de indisponiveis [%d] :\n", idx);
+	for (i = 0; i < 4; i++){
+		printf("Pos [%d] : %s\n", i, listaIndisp[i]);
+	}*/
 
 	strptime(hora,"%H%M", &eventoAux.dataHora);
 
@@ -509,14 +533,15 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
 		}
 		contDisp = 0;	
 	}
-	/*Eliminar comentario*/
-	printf("idx = %d e contResp = %d\n", idx, contResp);
-
+	/* ALTEREI CONDICAO PARA VER OS RESULTADOS DE OUTPUT*/
+	/*printf("idx = [%d] ; contSala = [%d]\n", idx, contSala);*/
 	if (contSala != 0){
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", eventos[indexEvento].descricao, eventos[indexEvento].sala);
 	}
 	else if ((contSala == 0) && (idx != 0)){
-		printf("Impossivel agendar evento %s. Participante %s %s %s %s tem um evento sobreposto.\n", eventos[indexEvento].descricao, listaIndisp[0], listaIndisp[1], listaIndisp[2], listaIndisp[3]);
+		for (i = 0; i < idx; i++){
+			printf("Impossivel agendar evento %s. Participante %s tem um evento sobreposto.\n", eventos[indexEvento].descricao, listaIndisp[i]);
+		}
 	}
 	else if ((contSala == 0) && (idx == 0)){
 		eventos[indexEvento] = eventoAux;
@@ -525,7 +550,7 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
 
 
 void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, char participante[MAX_NAMES_LENGTH]){
-	int i, contPar = 0, contPresenca = 0, contDisp = 0, numEventosDecorrer;
+	int i, contPar = 0, contPresenca = 0, contDisp = 0, numEventosDecorrer = 0;
 	char stringBarraZero[1];
 	Evento eventosAdecorrer[MAX_EVENTOS_DECORRER];
 	memset(stringBarraZero, '\0', sizeof(stringBarraZero));
@@ -555,7 +580,6 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 		strcpy(eventos[indexEvento].participantes[contPar], participante);
 	}
 }
-/******************************************************** ABAIXO ESTAO AS FUNCOES AINDA NAO TESTADAS COM VALORES **************************************************************************************************/
 
 int verificaPessoa(Evento eventosAdecorrer[], int idxEventos, char pessoa[]){
 	int i, e;
@@ -577,6 +601,7 @@ int buscaEventosAdecorrer(Evento eventos[],int numeroEventos, int indexEvento, E
 	int i, contInterset = 0, idx = 0;
 	for (i = 0; i < numeroEventos; i++){
 		if (i != indexEvento){
+			/*printf("Vai testar evento : %s\n", eventos[i].descricao);*/
 			contInterset = comparaTimestamps(Timestamp, duracao, getTimestamp(eventos[i]), eventos[i].duracao);
 		}
 		if (contInterset != 0){
@@ -590,10 +615,13 @@ int buscaEventosAdecorrer(Evento eventos[],int numeroEventos, int indexEvento, E
 int comparaTimestamps(time_t TimestampEvent1, int duracao1, time_t TimestampEvent2, int duracao2){
 	int contInterset = 0;
 	time_t TimestampFin1 = TimestampEvent1 + (duracao1 * 60), TimestampFin2 = TimestampEvent2 + (duracao2 * 60);
-	if (((TimestampEvent2 <= TimestampEvent1) && (TimestampEvent1 <= TimestampFin2)) || ((TimestampEvent2 <= TimestampFin1) && (TimestampFin1 <= TimestampFin2))){
-				/*Eliminar comentario*/
-				printf("Deu hit no intervalo .\n");
-				contInterset++;
+	/* FIZ ALTERACAO DO INTERVALO PARA NAO DAR FLAG SE O FIM OU INICIO COINCIDIREM APENAS*/
+	if (((TimestampEvent2 < TimestampEvent1) && (TimestampEvent1 < TimestampFin2)) || ((TimestampEvent2 < TimestampFin1) && (TimestampFin1 < TimestampFin2))
+	|| ((TimestampEvent1 < TimestampEvent2) && (TimestampEvent2 < TimestampFin1)) || ((TimestampEvent1 < TimestampFin2) && (TimestampFin2 < TimestampFin1)) 
+	|| ((TimestampEvent1 < TimestampEvent2) && (TimestampFin2 < TimestampFin1)) || ((TimestampEvent2 < TimestampEvent1) && (TimestampFin1 < TimestampFin2)) 
+	|| ((TimestampEvent1 == TimestampEvent2) && (TimestampFin1 == TimestampFin2))){
+			contInterset++;
+			/*printf("Deu intersecao !!\n");*/
 		} 
 		return contInterset;
 }
