@@ -50,7 +50,7 @@ int salaOcupada(Evento eventos[], int numeroEventos,int indexEvento, long timest
 
 void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hora[]);
 
-int getEventosDecorrer(Evento eventos[],int numeroEventos, int indexEvento,Evento eventosDecorrer[], long timestamp, int duracao);
+int getEventosDecorrer(Evento eventos[], int numeroEventos, int indexEvento, Evento eventosDecorrer[], long timestamp, int duracao);
 
 int pessoaIndisponivel(Evento eventosDecorrer[], int idxEventos, char pessoa[]);
 
@@ -216,7 +216,8 @@ int getEventosDaSala(Evento eventos[], int numeroEventos, Evento eventosSala[MAX
 
 long getTimestamp(Evento evento) {
 	time_t epoch = mktime(&evento.dataHora);
-	return (long)epoch;
+	
+	return (long) epoch;
 }
 
 void ordenaEventos(Evento eventos[], int min, int numeroEventos) {
@@ -564,10 +565,10 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 	}
 }
 
-int pessoaIndisponivel(Evento eventosDecorrer[], int idxEventos, char pessoa[]) {
+int pessoaIndisponivel(Evento eventosDecorrer[], int numeroEventos, char pessoa[]) {
 	int i, e;
 
-	for (i = 0; i < idxEventos; i++) {
+	for (i = 0; i < numeroEventos; i++) {
 		if (strcmp(pessoa, eventosDecorrer[i].responsavel) == 0) {
 			return 1;
 		}
@@ -581,7 +582,6 @@ int pessoaIndisponivel(Evento eventosDecorrer[], int idxEventos, char pessoa[]) 
 	return 0;
 }
 	
-
 int getEventosDecorrer(Evento eventos[], int numeroEventos, int indexEvento, Evento eventosDecorrer[], long timestamp, int duracao) {
 	int i, intersecaoIntervalos = 0, numeroEventosDecorrer = 0;
 
