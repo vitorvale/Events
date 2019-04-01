@@ -12,6 +12,8 @@
 #define MAX_NAMES_LENGTH 64
 #define MAX_COMPONENTES 10
 
+#define MAX_EVENTS (MAX_SALAS * MAX_EVENTOS_SALA)
+
 typedef struct evento {
     char descricao[MAX_NAMES_LENGTH];
     struct tm dataHora;
@@ -58,7 +60,7 @@ int comparaTimestamps(long timestampEvent1, int duracao1, long timestampEvent2, 
 
 int main() {
 	/* TODO: adicionar comentarios a explicar o que isto e */
-    Evento eventos[MAX_SALAS * MAX_EVENTOS_SALA];
+    Evento eventos[MAX_EVENTS];
     int numeroEventos = 0;
 	char params [342]; /* 63 + 8 + 4 + 4 + 2 + 63 * 4 + 9 (':') */
 	/* Ex: a Reuniao dos Ze:29032019:1000:60:1:Ze:Ze Carlos:Ze Pedro:Ze Joao */
@@ -278,7 +280,8 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONEN
 	int i, numComp = atoi(componentes[0]), contSala = 0;
 	int indexFalso = -1, participanteIndisponivel = 0, responsavelIndisponivel = 0, numEventosDecorrer = 0, idx = 0;
 	char dataHora[8 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
-	Evento evento, eventosDecorrer[MAX_SALAS * MAX_EVENTOS_SALA];
+	Evento evento;
+	Evento eventosDecorrer[900]; /*MAX_EVENTS];*/
 
 	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
    
@@ -379,7 +382,7 @@ int removeEvento(Evento eventos[], int numeroEventos, int indexEvento) {
 
 void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int duracao) {
 	int contSala = 0, numEventosDecorrer = 0, idx = 0, i, participanteIndisponivel = 0, responsavelIndisponivel = 0;
-	Evento eventosDecorrer[MAX_SALAS * MAX_EVENTOS_SALA];
+	Evento eventosDecorrer[MAX_EVENTS];
 	char listaIndisp[4][MAX_NAMES_LENGTH];
 
 	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
@@ -495,7 +498,7 @@ void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX
 void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hora[]) {
 	int salaOcup = 0, participanteIndisponivel = 0, i, responsavelIndisponivel = 0, numPartIndisponiveis = 0, numEventosDecorrer = 0;
 	Evento eventoAux = eventos[indexEvento];
-	Evento	eventosDecorrer[MAX_SALAS * MAX_EVENTOS_SALA];
+	Evento	eventosDecorrer[MAX_EVENTS];
 	char listaIndisp[4][MAX_NAMES_LENGTH];
 
 	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
@@ -537,7 +540,7 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
 
 void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, char participante[MAX_NAMES_LENGTH]) {
 	int i, numParticipantes = 0, participanteIndisponivel = 0, numEventosDecorrer = 0;
-	Evento eventosDecorrer[MAX_SALAS * MAX_EVENTOS_SALA];
+	Evento eventosDecorrer[MAX_EVENTS];
 
 	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, getTimestamp(eventos[indexEvento]), eventos[indexEvento].duracao);
 
