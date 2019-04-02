@@ -9,7 +9,7 @@
 #define MAX_SALAS 10
 #define MAX_EVENTOS_SALA 100
 #define MAX_PARTICIPANTES 3
-#define MAX_NAMES_LENGTH 64
+#define MAX_NAMES_LENGTH 630
 #define MAX_COMPONENTES 10
 
 #define MAX_EVENTS (MAX_SALAS * MAX_EVENTOS_SALA)
@@ -69,7 +69,7 @@ int main() {
 	char cmd;
 
 	while (1) {
-	    int numParam, indexEvento = -1;
+	    int numParam = 0, indexEvento = -1;
 
 		/* Ler comando */
 		scanf("%c", &cmd);
@@ -99,7 +99,7 @@ int main() {
 			strcpy(descricaoEvento, componentes[1]);
 			if(numParam <= 0) {
 				/* TODO: adicionar a mensagem de erro correcta para este caso */
-				printf("Parametros invalidos.\n");
+				/*printf("Parametros invalidos.\n");*/
                 continue;
 			}
 
@@ -281,7 +281,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[MAX_COMPONEN
 	int indexFalso = -1, participanteIndisponivel = 0, responsavelIndisponivel = 0, numEventosDecorrer = 0, idx = 0;
 	char dataHora[8 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
 	Evento evento;
-	Evento eventosDecorrer[900]; /*MAX_EVENTS];*/
+	Evento eventosDecorrer[970]; /*MAX_EVENTS];*/
 
 	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
    
@@ -559,7 +559,6 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 	if (numParticipantes == 3) {
 		printf("Impossivel adicionar participante. Evento %s ja tem 3 participantes.\n", eventos[indexEvento].descricao);
 	}
-	/*Falta ver se o participante já está noutro evento a essa hora*/
 	else if (participanteIndisponivel != 0) {
 		printf("Impossivel adicionar participante. Participante %s tem um evento sobreposto.\n", participante);
 	}
