@@ -23,7 +23,7 @@ typedef struct evento {
     int duracao;
     int sala;
     char responsavel[MAX_NAMES_LENGTH];
-    char participantes[3][MAX_NAMES_LENGTH];
+    char participantes[MAX_PARTICIPANTES][MAX_NAMES_LENGTH];
 } Evento;
 
 
@@ -209,7 +209,7 @@ void printEvento(const Evento evento) {
 	strftime(hora, sizeof(hora), "%H%M", &evento.dataHora);
 
 	printf("%s %s %s %d Sala%d %s\n", evento.descricao, data, hora, evento.duracao, evento.sala, evento.responsavel);
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_PARTICIPANTES; i++) {
 		/* Ignora participantes nao existentes */
 		if (strlen(evento.participantes[i]) == 0) {
 			break;
@@ -348,7 +348,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
         }
 	}
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_PARTICIPANTES; i++) {
 		if (strlen(evento.participantes[i]) > 0) {
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, evento.participantes[i]);
 			if (participanteIndisponivel != 0) {
@@ -439,7 +439,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 		}
 	}
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_PARTICIPANTES; i++) {
 		if (strlen(eventos[indexEvento].participantes[i]) > 0 ) {
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].participantes[i]);
 
@@ -461,8 +461,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 			for (i = 0; i < idx; i++) {
 				printf("Impossivel agendar evento %s. Participante %s tem um evento sobreposto.\n", eventos[indexEvento].descricao, listaIndisp[i]);
 			}
-		} /*Muda o evento de sala*/
-		else {
+		} else {
 			eventos[indexEvento].duracao = duracao;
 		}
 	}
@@ -512,7 +511,7 @@ int salaOcupada(const Evento eventos[], int numeroEventos,int indexEvento, long 
 void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX_NAMES_LENGTH]) {
 	int i, numParticipantes = 0, indexParticipante = -1;
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_PARTICIPANTES; i++) {
 		if (strcmp(eventos[indexEvento].participantes[i], participante) == 0) {
 			indexParticipante = i;
 			numParticipantes++;
@@ -538,7 +537,7 @@ void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX
 				}
 			}
 		}
-		for (i = numParticipantes - 1; i < 3; i++) {
+		for (i = numParticipantes - 1; i < MAX_PARTICIPANTES; i++) {
 			memset(eventos[indexEvento].participantes[i], '\0', sizeof(eventos[indexEvento].participantes[i]));
 		}
 	}
@@ -572,7 +571,7 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
 		}
 	}
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_PARTICIPANTES; i++) {
 		if (strlen(eventos[indexEvento].participantes[i]) > 0) {
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].participantes[i]);
 
@@ -601,7 +600,7 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 	memset(&eventosDecorrer, 0, sizeof(eventosDecorrer));
 	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, eventos[indexEvento].timestamp, eventos[indexEvento].duracao);
 
-	for (i = 0; i < 3 ; i++) {
+	for (i = 0; i < MAX_PARTICIPANTES ; i++) {
 		if (strcmp(eventos[indexEvento].participantes[i], participante) == 0) {
 			/* Participante ja esta no evento */
 			return;
@@ -613,8 +612,8 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 
 	participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, participante);
 	
-	if (numParticipantes >= 3) {
-		printf("Impossivel adicionar participante. Evento %s ja tem 3 participantes.\n", eventos[indexEvento].descricao);
+	if (numParticipantes >= MAX_PARTICIPANTES) {
+		printf("Impossivel adicionar participante. Evento %s ja tem %d participantes.\n", eventos[indexEvento].descricao, MAX_PARTICIPANTES);
 	}
 	else if (participanteIndisponivel != 0) {
 		printf("Impossivel adicionar participante. Participante %s tem um evento sobreposto.\n", participante);
@@ -633,7 +632,7 @@ int pessoaIndisponivel(const Evento eventosDecorrer[], int numeroEventos, char p
 		if (strcmp(pessoa, eventosDecorrer[i].responsavel) == 0) {
 			return 1;
 		}
-		for (e = 0; e < 3; e++) {
+		for (e = 0; e < MAX_PARTICIPANTES; e++) {
 			if (strcmp(pessoa, eventosDecorrer[i].participantes[e]) == 0) {
 				return 1;
 			}
