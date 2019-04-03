@@ -192,7 +192,7 @@ void printEvento(const Evento evento) {
 	printf("%s %s %s %d Sala%d %s\n", evento.descricao, data, hora, evento.duracao, evento.sala, evento.responsavel);
 	for (i = 0; i < 3; i++) {
 		/* Ignora participantes nao existentes */
-		if (evento.participantes[i][0] == '\0') {
+		if (strlen(evento.participantes[i]) == 0) {
 			break;
 		}
 		numParticipantes++;
@@ -297,6 +297,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
 	memset(&eventosDecorrer, 0, sizeof(eventosDecorrer));
 
     memset(dataHora, '\0', sizeof(dataHora));
+	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
 
 	sprintf(dataHora, "%s %s", componentes[2], componentes[3]);
 	strptime(dataHora, "%d%m%Y %H%M", &evento.dataHora);
@@ -320,7 +321,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
 	}
 
 	for (i = 0; i < 3; i++) {
-		if (evento.participantes[i][0] != '\0') {
+		if (strlen(evento.participantes[i]) > 0) {
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, evento.participantes[i]);
 			if (participanteIndisponivel != 0) {
 				strcpy(listaIndisp[numeroParticipIndisp++], evento.participantes[i]);
@@ -403,7 +404,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 	}
 
 	for (i = 0; i < 3; i++) {
-		if (eventos[indexEvento].participantes[i][0] != '\0') {
+		if (strlen(eventos[indexEvento].participantes[i]) > 0 ) {
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].participantes[i]);
 
 			if (participanteIndisponivel != 0) {
@@ -480,7 +481,7 @@ void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX
 			contPresenca++;
 			numParticipantes++;
 		}
-		else if (eventos[indexEvento].participantes[i][0] != '\0') {
+		else if (strlen(eventos[indexEvento].participantes[i]) > 0) {
 			numParticipantes++;
 		}
 	}
@@ -489,7 +490,7 @@ void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX
 	}
 	else if ((contPresenca != 0) && (numParticipantes > 1)) {
 		for (i = indexParticipante; i < 2 ; i++) {
-			if (eventos[indexEvento].participantes[i][0] != '\0') {
+			if (strlen(eventos[indexEvento].participantes[i]) > 0) {
 				strcpy(eventos[indexEvento].participantes[i], eventos[indexEvento].participantes[i + 1]);
 			}
 		}
@@ -526,7 +527,7 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
 	}
 
 	for (i = 0; i < 3; i++) {
-		if (eventos[indexEvento].participantes[i][0] != '\0') {
+		if (strlen(eventos[indexEvento].participantes[i]) > 0) {
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].participantes[i]);
 
 			if (participanteIndisponivel != 0) {
@@ -557,7 +558,7 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 			/* Participante ja esta no evento */
 			return;
 		}
-		else if (eventos[indexEvento].participantes[i][0] != '\0') {
+		else if (strlen(eventos[indexEvento].participantes[i]) > 0) {
 			numParticipantes++;
 		}
 	}
