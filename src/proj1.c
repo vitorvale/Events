@@ -12,6 +12,8 @@
 #define MAX_NAMES_LENGTH 64
 #define MAX_COMPONENTES 10
 
+#define MAX_SIZE_PARAMS 999 /* 1 + 1 (' ') 63 + 8 + 4 + 4 + 2 + 63 * 4 + 8 (':') + 1 ('\0') */
+
 #define MAX_EVENTOS (MAX_SALAS * MAX_EVENTOS_SALA)
 
 typedef struct evento {
@@ -63,7 +65,7 @@ int main() {
 	/* TODO: adicionar comentarios a explicar o que isto e */
     Evento eventos[MAX_EVENTOS];
     int numeroEventos = 0;
-	char params [342]; /* 63 + 8 + 4 + 4 + 2 + 63 * 4 + 9 (':') */
+	char params [MAX_SIZE_PARAMS];
 	/* Ex: a Reuniao dos Ze:29032019:1000:60:1:Ze:Ze Carlos:Ze Pedro:Ze Joao */
 
 	char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH];
@@ -87,7 +89,7 @@ int main() {
 		if (cmd == 'a' || cmd == 'r' || cmd == 't' || cmd == 's' || cmd == 'm' || cmd == 'A' || cmd == 'R' || cmd == 'i') {
 			char c;
 			int idx = 0;
-			while((c = getchar()) != '\n') {
+			while((c = getchar()) != '\n' && (idx + 1) < MAX_SIZE_PARAMS) {
 				/* skip do primeiro espaco */
 				if (idx == 0 && c == ' ') {
 					continue;
