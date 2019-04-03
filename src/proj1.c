@@ -414,8 +414,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 
 	responsavelIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].responsavel);
 	if (responsavelIndisponivel != 0) {
-		strcpy(listaIndisp[idx], eventos[indexEvento].responsavel);
-		idx++;
+		strcpy(listaIndisp[idx++], eventos[indexEvento].responsavel);
 	}
 
 	for (i = 0; i < 3; i++) {
@@ -423,8 +422,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 			participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].participantes[i]);
 
 			if (participanteIndisponivel != 0) {
-				strcpy(listaIndisp[idx], eventos[indexEvento].participantes[i]);
-				idx++;
+				strcpy(listaIndisp[idx++], eventos[indexEvento].participantes[i]);
 			}
 		}
 	}
@@ -488,29 +486,34 @@ int salaOcupada(const Evento eventos[], int numeroEventos,int indexEvento, long 
 }
 
 void removeParticipante(Evento eventos[], int indexEvento, char participante[MAX_NAMES_LENGTH]) {
-	int i, contPresenca = 0, numParticipantes = 0, indexParticipante = 0;
+	int i, numParticipantes = 0, indexParticipante = -1;
 
 	for (i = 0; i < 3; i++) {
 		if (strcmp(eventos[indexEvento].participantes[i], participante) == 0) {
 			indexParticipante = i;
-			contPresenca++;
 			numParticipantes++;
 		}
 		else if (strlen(eventos[indexEvento].participantes[i]) > 0) {
 			numParticipantes++;
 		}
 	}
-	if ((contPresenca != 0) && (numParticipantes == 1)) {
+
+	/* Participante nao esta no evento */
+	if (indexParticipante < 0) {
+		return;
+	}
+
+	if(numParticipantes <= 1) {
 		printf("Impossivel remover participante. Participante %s e o unico participante no evento %s.\n", participante, eventos[indexEvento].descricao);
 	}
-	else if ((contPresenca != 0) && (numParticipantes > 1)) {
+	else if (indexParticipante >= 0 && numParticipantes > 1) {
 		for (i = indexParticipante; i < 2 ; i++) {
-			if (strlen(eventos[indexEvento].participantes[i]) > 0) {
+			if (strlen(eventos[indexEvento].participantes[i + 1]) > 0) {
 				strcpy(eventos[indexEvento].participantes[i], eventos[indexEvento].participantes[i + 1]);
 			}
 		}
-		if (numParticipantes == 2 || numParticipantes == 3) {
-			memset(eventos[indexEvento].participantes[numParticipantes - 1], '\0', sizeof(eventos[indexEvento].participantes[numParticipantes - 1]));
+		for (i = numParticipantes - 1; i < 3; i++) {
+			memset(eventos[indexEvento].participantes[i], '\0', sizeof(eventos[indexEvento].participantes[i]));
 		}
 	}
 }
@@ -580,7 +583,7 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 
 	participanteIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, participante);
 	
-	if (numParticipantes == 3) {
+	if (numParticipantes >= 3) {
 		printf("Impossivel adicionar participante. Evento %s ja tem 3 participantes.\n", eventos[indexEvento].descricao);
 	}
 	else if (participanteIndisponivel != 0) {
