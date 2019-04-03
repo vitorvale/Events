@@ -12,7 +12,7 @@
 #define MAX_NAMES_LENGTH 64
 #define MAX_COMPONENTES 10
 
-#define MAX_SIZE_PARAMS 999 /* 1 + 1 (' ') 63 + 8 + 4 + 4 + 2 + 63 * 4 + 8 (':') + 1 ('\0') */
+#define MAX_SIZE_PARAMS 350
 
 #define MAX_EVENTOS (MAX_SALAS * MAX_EVENTOS_SALA)
 
@@ -312,7 +312,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
 	int indexFalso = -1, participanteIndisponivel = 0, responsavelIndisponivel = 0, numEventosDecorrer = 0, numeroParticipIndisp = 0;
 	Evento evento = {{0}, {0}, 0, 0, 0, {0}, {{0}}};
 	Evento eventosDecorrer[MAX_EVENTOS];
-	char dataHora[8 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
+	char dataHora[8 + 1 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
 
 	memset(&eventosDecorrer, 0, sizeof(eventosDecorrer));
 
