@@ -16,7 +16,8 @@
 
 typedef struct evento {
     char descricao[MAX_NAMES_LENGTH];
-    struct tm dataHora;
+	struct tm dataHora;
+	long timestamp;
     int duracao;
     int sala;
     char responsavel[MAX_NAMES_LENGTH];
@@ -34,13 +35,11 @@ int removeEvento(Evento eventos[], int numeroEventos, int indexEvento);
 
 void listaEventos(Evento eventos[], int numeroEventos);
 
-void listaEventosOrdenados(Evento eventos[], int numeroEventos);
-
 int getEventosDaSala(Evento eventos[], int numeroEventos, Evento eventosSala[MAX_EVENTOS_SALA], int sala);
 
 void ordenaEventos(Evento eventos[], int minimo, int numeroEventos);
 
-long getTimestamp(Evento evento);
+long getTimestamp(struct tm tmDataHora);
 
 void parteString(char componentes[MAX_COMPONENTES][MAX_NAMES_LENGTH], char params[]);
 
@@ -129,7 +128,9 @@ int main() {
 				}
 				break;
 			case 'l' :
-				listaEventosOrdenados(eventos, numeroEventos);
+				/* indices de 0 ate numero de eventos -1 */
+				ordenaEventos(eventos, 0, numeroEventos - 1);
+                listaEventos(eventos, numeroEventos);
 				break;
 			case 't' :
 				/* componentes[2] => nova duracao */
@@ -158,7 +159,9 @@ int main() {
 					memset(&eventosSala, 0, sizeof(eventosSala));
 
 					numeroEventosSala = getEventosDaSala(eventos, numeroEventos, eventosSala, atoi(componentes[1]));
-					listaEventosOrdenados(eventosSala, numeroEventosSala);
+					/* indices de 0 ate numero de eventos -1 */
+					ordenaEventos(eventosSala, 0, numeroEventosSala - 1);
+                    listaEventos(eventosSala, numeroEventosSala);
 				}
 				break;
 			case 'i' :
@@ -212,21 +215,6 @@ void listaEventos(Evento eventos[], int numeroEventos) {
     }
 }
 
-void listaEventosOrdenados(Evento eventos[], int numeroEventos) {
-    int i;
-	Evento eventosActuais[MAX_EVENTOS_SALA * MAX_SALAS];
-
-	memset(&eventosActuais, 0, sizeof(eventosActuais));
-	
-    for(i = 0; i < numeroEventos; i++) {
-        eventosActuais[i] = eventos[i];
-    }
-
-	/* indices de 0 ate numero de eventos da sala -1 */
-	ordenaEventos(eventosActuais, 0, numeroEventos - 1);
-	listaEventos(eventosActuais, numeroEventos);
-}
-
 int getEventosDaSala(Evento eventos[], int numeroEventos, Evento eventosSala[MAX_EVENTOS_SALA], int sala) {
 	int i, numeroEventosSala = 0;
 
@@ -239,8 +227,8 @@ int getEventosDaSala(Evento eventos[], int numeroEventos, Evento eventosSala[MAX
 	return numeroEventosSala;
 }
 
-long getTimestamp(Evento evento) {
-	time_t epoch = mktime(&evento.dataHora);
+long getTimestamp(struct tm tmDataHora) {
+	time_t epoch = mktime(&tmDataHora);
 	
 	return (long) epoch;
 }
@@ -250,21 +238,21 @@ void ordenaEventos(Evento eventos[], int min, int numeroEventos) {
 	Evento eventoTmp = eventos[(min + numeroEventos) / 2];
 
     while(i <= j) {
-		long timestamp = getTimestamp(eventoTmp);
+		long timestamp = eventoTmp.timestamp;
 		
-        while((getTimestamp(eventos[i]) < timestamp || 
-				(getTimestamp(eventos[i]) == timestamp && eventos[i].sala < eventoTmp.sala)) && i < numeroEventos) {
+        while((eventos[i].timestamp < timestamp || 
+				(eventos[i].timestamp == timestamp && eventos[i].sala < eventoTmp.sala)) && i < numeroEventos) {
             i++;
         }
-        while((getTimestamp(eventos[j]) > timestamp || 
-				(getTimestamp(eventos[j]) == timestamp && eventos[j].sala > eventoTmp.sala)) && j > min) {
+        while((eventos[j].timestamp > timestamp || 
+				(eventos[j].timestamp == timestamp && eventos[j].sala > eventoTmp.sala)) && j > min) {
             j--;
         }
         if(i <= j) {
 			/* No caso de existirem vários eventos que se iniciem ao mesmo tempo,
 			   deverão ser listados pela ordem crescente do número da sala */
-			if(getTimestamp(eventos[i]) != getTimestamp(eventos[j]) 
-					|| (getTimestamp(eventos[i]) == getTimestamp(eventos[j]) && eventos[i].sala > eventos[j].sala)) {
+			if(eventos[i].timestamp != eventos[j].timestamp 
+					|| (eventos[i].timestamp == eventos[j].timestamp && eventos[i].sala > eventos[j].sala)) {
             	Evento eventoTmp2 = eventos[i];
 	            eventos[i] = eventos[j];
 	            eventos[j] = eventoTmp2;
@@ -302,20 +290,17 @@ int procuraEvento(Evento eventos[], int numeroEventos,char descricaoEvento[MAX_N
 int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_LENGTH]) {
 	int i, numComp = atoi(componentes[0]), salaOcup = 0;
 	int indexFalso = -1, participanteIndisponivel = 0, responsavelIndisponivel = 0, numEventosDecorrer = 0, numeroParticipIndisp = 0;
-	Evento evento = {{0}, {0}, 0, 0, {0}, {{0}}};
+	Evento evento = {{0}, {0}, 0, 0, 0, {0}, {{0}}};
 	Evento eventosDecorrer[MAX_EVENTS];
 	char dataHora[8 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
 
 	memset(&eventosDecorrer, 0, sizeof(eventosDecorrer));
 
     memset(dataHora, '\0', sizeof(dataHora));
-    memset(evento.descricao, '\0', sizeof(evento.descricao));
-    memset(evento.responsavel, '\0', sizeof(evento.responsavel));
-	memset(evento.participantes, '\0', sizeof(evento.participantes[0][0]) * 3 * MAX_NAMES_LENGTH);
-	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
 
 	sprintf(dataHora, "%s %s", componentes[2], componentes[3]);
 	strptime(dataHora, "%d%m%Y %H%M", &evento.dataHora);
+	evento.timestamp = getTimestamp(evento.dataHora);
 
     strcpy(evento.descricao, componentes[1]);
     evento.duracao = atoi(componentes[4]);
@@ -327,7 +312,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
     }
 
 	/* como o evento ainda nao foi adicionado aos eventos, e passado um index falso */
-	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexFalso, eventosDecorrer, getTimestamp(evento), evento.duracao);
+	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexFalso, eventosDecorrer, evento.timestamp, evento.duracao);
 
 	responsavelIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, evento.responsavel);
 	if (responsavelIndisponivel != 0) {
@@ -343,7 +328,7 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
 		}
 	}
 
-	salaOcup = salaOcupada(eventos, numeroEventos, indexFalso, getTimestamp(evento), evento.duracao, evento.sala);
+	salaOcup = salaOcupada(eventos, numeroEventos, indexFalso, evento.timestamp, evento.duracao, evento.sala);
 	if (salaOcup != 0) {
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", evento.descricao, evento.sala);
 	} else {
@@ -409,7 +394,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
     memset(&eventosDecorrer, 0, sizeof(eventosDecorrer));
 	memset(listaIndisp, '\0', sizeof(listaIndisp[0][0]) * 4 * MAX_NAMES_LENGTH);
 
-	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, getTimestamp(eventos[indexEvento]), duracao);
+	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, eventos[indexEvento].timestamp, duracao);
 
 	responsavelIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].responsavel);
 	if (responsavelIndisponivel != 0) {
@@ -428,7 +413,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 		}
 	}
 
-	salaOcup = salaOcupada(eventos, numeroEventos, indexEvento, getTimestamp(eventos[indexEvento]), duracao, eventos[indexEvento].sala);
+	salaOcup = salaOcupada(eventos, numeroEventos, indexEvento, eventos[indexEvento].timestamp, duracao, eventos[indexEvento].sala);
 
 	if (salaOcup != 0) {
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", eventos[indexEvento].descricao, eventos[indexEvento].sala);
@@ -449,7 +434,7 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
 void mudaSala(Evento eventos[], int indexEvento, int numeroEventos, int novaSala) {
 	int salaOcup = 0;
 
-	salaOcup = salaOcupada(eventos, numeroEventos, indexEvento, getTimestamp(eventos[indexEvento]), eventos[indexEvento].duracao, novaSala);
+	salaOcup = salaOcupada(eventos, numeroEventos, indexEvento, eventos[indexEvento].timestamp, eventos[indexEvento].duracao, novaSala);
 
 	if (salaOcup != 0) {
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", eventos[indexEvento].descricao, novaSala);
@@ -468,7 +453,7 @@ int salaOcupada(const Evento eventos[], int numeroEventos,int indexEvento, long 
 	for (i = 0; i < numeroEventos; i++) {
 		const Evento evento = eventos[i];
 		if ((evento.sala == sala) && (i != indexEvento)) {
-			timestampIniSala2 = getTimestamp(evento);
+			timestampIniSala2 = evento.timestamp;
 			timestampFimSala2 = timestampIniSala2 + (evento.duracao * 60);
 
 			if (((timestampIniSala2 < timestampInicio) && (timestampInicio < timestampFimSala2)) ||
@@ -525,13 +510,15 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
 
 	strptime(hora,"%H%M", &evento.dataHora);
 
-	salaOcup = salaOcupada(eventos, numeroEventos, indexEvento, getTimestamp(evento), eventos[indexEvento].duracao, eventos[indexEvento].sala);
+	evento.timestamp = getTimestamp(evento.dataHora);
+
+	salaOcup = salaOcupada(eventos, numeroEventos, indexEvento, evento.timestamp, eventos[indexEvento].duracao, eventos[indexEvento].sala);
 	if (salaOcup != 0) {
 		printf("Impossivel agendar evento %s. Sala%d ocupada.\n", eventos[indexEvento].descricao, eventos[indexEvento].sala);
 		return;
 	}
 
-	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, getTimestamp(evento), eventos[indexEvento].duracao);
+	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, evento.timestamp, eventos[indexEvento].duracao);
 	
 	responsavelIndisponivel = pessoaIndisponivel(eventosDecorrer, numEventosDecorrer, eventos[indexEvento].responsavel);
 	if (responsavelIndisponivel != 0) {
@@ -563,7 +550,7 @@ void adicionaParticipante(Evento eventos[], int indexEvento,int numeroEventos, c
 	Evento eventosDecorrer[MAX_EVENTS];
 
 	memset(&eventosDecorrer, 0, sizeof(eventosDecorrer));
-	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, getTimestamp(eventos[indexEvento]), eventos[indexEvento].duracao);
+	numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, eventos[indexEvento].timestamp, eventos[indexEvento].duracao);
 
 	for (i = 0; i < 3 ; i++) {
 		if (strcmp(eventos[indexEvento].participantes[i], participante) == 0) {
@@ -610,7 +597,7 @@ int getEventosDecorrer(const Evento eventos[], int numeroEventos, int indexEvent
 
 	for (i = 0; i < numeroEventos; i++) {
 		if (i != indexEvento) {
-			intersecaoIntervalos = comparaTimestamps(timestamp, duracao, getTimestamp(eventos[i]), eventos[i].duracao);
+			intersecaoIntervalos = comparaTimestamps(timestamp, duracao, eventos[i].timestamp, eventos[i].duracao);
 
 			if (intersecaoIntervalos != 0) {
 				eventosDecorrer[numeroEventosDecorrer++] = eventos[i];
