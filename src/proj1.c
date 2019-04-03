@@ -302,7 +302,7 @@ int procuraEvento(Evento eventos[], int numeroEventos,char descricaoEvento[MAX_N
 int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_LENGTH]) {
 	int i, numComp = atoi(componentes[0]), salaOcup = 0;
 	int indexFalso = -1, participanteIndisponivel = 0, responsavelIndisponivel = 0, numEventosDecorrer = 0, numeroParticipIndisp = 0;
-	Evento evento = {0};
+	Evento evento = {{0}, {0}, 0, 0, {0}, {{0}}};
 	Evento eventosDecorrer[MAX_EVENTS];
 	char dataHora[8 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
 
