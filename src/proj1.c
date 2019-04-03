@@ -118,8 +118,16 @@ int main() {
 
 		switch(cmd) {
 			case 'a' :
-				if (numeroEventos < MAX_EVENTOS && numParam >= 6) {
-					numeroEventos = criaEvento(eventos, numeroEventos, componentes);
+				{
+					int numeroEventosSala = 0;
+	                Evento eventosSala[MAX_EVENTOS_SALA];
+	                memset(&eventosSala, 0, sizeof(eventosSala));
+
+					/* numero da sala está no componentes[5] */
+	                numeroEventosSala = getEventosDaSala(eventos, numeroEventos, eventosSala, atoi(componentes[5]));
+					if (numeroEventos < MAX_EVENTOS && numeroEventosSala < MAX_EVENTOS_SALA && numParam >= 6) {
+						numeroEventos = criaEvento(eventos, numeroEventos, componentes);
+					}
 				}
 				break;
 			case 'r':
@@ -136,17 +144,24 @@ int main() {
 				/* componentes[2] => nova duracao */
 				alteraDuracao(eventos, indexEvento, numeroEventos, atoi(componentes[2]));
 				break;
-			/* Adicionar verificacao*/
-			case 'm' :{
-				mudaSala(eventos, indexEvento, numeroEventos, atoi(componentes[2]));
+			case 'm' :
+				{
+					int numeroEventosSala = 0;
+	                Evento eventosSala[MAX_EVENTOS_SALA];
+	                memset(&eventosSala, 0, sizeof(eventosSala));
+
+	                /* numero da sala está no componentes[2] */
+	                numeroEventosSala = getEventosDaSala(eventos, numeroEventos, eventosSala, atoi(componentes[2]));
+					if(numeroEventosSala < MAX_EVENTOS_SALA) {
+						mudaSala(eventos, indexEvento, numeroEventos, atoi(componentes[2]));
+					}
+				}
 				break;
-			}
-			/* Adicionar verificacao*/
-			case 'A' :{
-				adicionaParticipante(eventos, indexEvento, numeroEventos, componentes[2]);
+			case 'A' :
+				{
+					adicionaParticipante(eventos, indexEvento, numeroEventos, componentes[2]);
+				}
 				break;
-			}
-			/* Adicionar verificacao*/
 			case 'R' :{
 				removeParticipante(eventos, indexEvento, componentes[2]);
 				break;
