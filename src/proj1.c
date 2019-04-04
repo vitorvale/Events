@@ -341,12 +341,12 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
     int i, numComp = atoi(componentes[0]), salaOcup = 0;
     int indexFalso = -1, participanteIndisponivel = 0;
     int responsavelIndisponivel = 0, numEventosDecorrer = 0, numeroParticipIndisp = 0;
-    char dataHora[8 + 1 + 4 + 1], listaIndisp[4][MAX_NAMES_LENGTH];
+    char dataHora[8 + 1 + 4 + 1], listaIndisp[(MAX_PARTICIPANTES + 1)][MAX_NAMES_LENGTH];
     Evento evento = {{0}, {0}, 0, 0, 0, {0}, {{0}}};
     Evento eventosDecorrer[MAX_EVENTOS] = {{{0}, {0}, 0, 0, 0, {0}, {{0}}}};;
 
     memset(dataHora, '\0', sizeof(char) * 12);
-    memset(listaIndisp, '\0', sizeof(char) * 4 * MAX_NAMES_LENGTH);
+    memset(listaIndisp, '\0', sizeof(char) * (MAX_PARTICIPANTES + 1) * MAX_NAMES_LENGTH);
 
     /* guarda as componentes nos campos respetivos */
 
@@ -484,9 +484,9 @@ void alteraDuracao(Evento eventos[], int indexEvento, int numeroEventos, int dur
     /* vetor de eventos que decorrem no intervalo de tempo
      que interseta com o do evento que queremos comparar */
     Evento eventosDecorrer[MAX_EVENTOS] = {{{0}, {0}, 0, 0, 0, {0}, {{0}}}};
-    char listaIndisp[4][MAX_NAMES_LENGTH];
+    char listaIndisp[(MAX_PARTICIPANTES + 1)][MAX_NAMES_LENGTH];
 
-    memset(listaIndisp, '\0', sizeof(char) * 4 * MAX_NAMES_LENGTH);
+    memset(listaIndisp, '\0', sizeof(char) * (MAX_PARTICIPANTES + 1) * MAX_NAMES_LENGTH);
 
     /* Envia a nova duracao para ver quais eventos ocorrem no mesmo intervalo de tempo */
     numEventosDecorrer = getEventosDecorrer(eventos, numeroEventos, indexEvento, eventosDecorrer, eventos[indexEvento].timestamp, duracao);
@@ -635,9 +635,9 @@ void alteraInicio(Evento eventos[], int indexEvento, int numeroEventos, char hor
      inicio e mando-o para dentro das verificacoes */
     Evento evento = eventos[indexEvento];
     Evento    eventosDecorrer[MAX_EVENTOS] = {{{0}, {0}, 0, 0, 0, {0}, {{0}}}};
-    char listaIndisp[4][MAX_NAMES_LENGTH];
+    char listaIndisp[(MAX_PARTICIPANTES + 1)][MAX_NAMES_LENGTH];
 
-    memset(listaIndisp, '\0', sizeof(char) * 4 * MAX_NAMES_LENGTH);
+    memset(listaIndisp, '\0', sizeof(char) * (MAX_PARTICIPANTES + 1) * MAX_NAMES_LENGTH);
 
     /* Ponho a nova hora na estrutura tm de tempo */
     strptime(hora,"%H%M", &evento.dataHora);
