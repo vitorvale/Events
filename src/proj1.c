@@ -108,6 +108,9 @@ int main() {
             parteString(componentes, params);
             /* o numero de parametros esta guardado no primeiro indice do vetor */
             numParam = atoi(componentes[0]);
+			if(numParam <= 0) {
+				continue;
+			}
         }
 
         /* Comandos que precisam de verificar se a descricao e' igual a' de algum evento existente */
@@ -345,6 +348,14 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
     Evento evento = {{0}, {0}, 0, 0, 0, {0}, {{0}}};
     Evento eventosDecorrer[MAX_EVENTOS] = {{{0}, {0}, 0, 0, 0, {0}, {{0}}}};;
 
+	/* valida tamanho dos componentes - tem de ter no minimo 7 componentes
+	   1-descricao, 2-data, 3-hora, 4-duracao, 5-sala, 6-responsavel, 7-particpante1 */
+	if(strlen(componentes[1]) >= MAX_NAMES_LENGTH || strlen(componentes[2]) > 8 ||
+		strlen(componentes[3]) > 4 || strlen(componentes[4]) > 4 ||
+			strlen(componentes[5]) > 2 || strlen(componentes[6]) >= MAX_NAMES_LENGTH ||
+				strlen(componentes[7]) >= MAX_NAMES_LENGTH || numComp < 7) {
+		return numeroEventos;
+	}
     memset(dataHora, '\0', sizeof(char) * 12);
     memset(listaIndisp, '\0', sizeof(char) * (MAX_PARTICIPANTES + 1) * MAX_NAMES_LENGTH);
 
@@ -373,9 +384,10 @@ int criaEvento(Evento eventos[], int numeroEventos,char componentes[][MAX_NAMES_
     }
 
     for(i = 0; i < (numComp - 6); i++) {
-        if(strlen(componentes[7 + i]) < sizeof(evento.participantes[i])) {
-            strcpy(evento.participantes[i], componentes[7 + i]);
+        if(strlen(componentes[7 + i]) >= sizeof(evento.participantes[i])) {
+			return numeroEventos;
         }
+        strcpy(evento.participantes[i], componentes[7 + i]);
     }
 
     /* como o evento ainda nao foi adicionado aos eventos, e passado um index falso */
